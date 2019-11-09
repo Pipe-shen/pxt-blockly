@@ -1760,7 +1760,7 @@ Blockly.BlockSvg.prototype.bindReporterHoverEvents_ = function() {
   var that = this;
   Blockly.bindEvent_(this.svgGroup_, 'mouseover', null, function(e) {
     var target = that;
-    if (target.isInFlyout) return;
+    if (target.isInFlyout) {return;}
 
     while (target.isShadow_ && target.parentBlock_) {
       target = target.parentBlock_;
@@ -1773,7 +1773,7 @@ Blockly.BlockSvg.prototype.bindReporterHoverEvents_ = function() {
 
   Blockly.bindEvent_(this.svgGroup_, 'mouseout', null, function(/*e*/) {
     var target = that;
-    if (target.isInFlyout) return;
+    if (target.isInFlyout) {return;}
 
     Blockly.utils.dom.removeClass(/** @type {!Element} */ (that.svgPath_), 'blocklyReporterHover');
   });
