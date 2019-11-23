@@ -67,7 +67,7 @@
 <script src="../blocks/variables_dynamic.js"></script>
 <script src="../blocks/procedures.js"></script>
 <script src="../blocks/pxt_blockly_functions.js"></script>
-<script src="../blocks/tabs.js"></script>
+<!-- <script src="../blocks/tabs.js"></script> -->
 <script src="blocks/test_blocks.js"></script>
 <script src="blocks/pxt_test_blocks.js"></script>
 <script>
@@ -155,6 +155,9 @@ function start() {
   workspace.registerButtonCallback('GROUP_HELP', function(button) {
     alert("Help icon triggered")
   });
+
+  workspace.addChangeListener(logger);
+
 }
 
 function addToolboxButtonCallbacks() {
@@ -341,8 +344,119 @@ function logEvents(state) {
   }
 }
 
+
 function logger(e) {
-  console.log(e);
+  // 监听
+  console.log(e.type)
+  // if(e.type != 'move') return;
+  let { group, blockId, workspaceId } = e
+  // console.log({ group, blockId, workspaceId })
+  let arrBlocks = workspace.getTopBlocks()
+  // console.log(arrBlocks)
+  let tabs = document.querySelector('#tabs')
+  let tabsIndex = document.querySelector('#tabsIndex')
+  tabs.innerHTML = ''
+  tabsIndex.innerHTML = ''
+  for(var i = 0; i < arrBlocks.length; i++){
+    // console.log(arrBlocks[i].getVarModels())
+    var temp = ''
+
+    temp = getAllVariablesByTab(arrBlocks[i])
+    /* arrBlocks[i].getVarModels().map((x)=>{
+      temp += x.name
+    }) */
+    // console.log(arrBlocks[i].childBlocks_.length)
+    tabs.innerHTML += '<button type="button" class="btn-tab" onclick="tabClick(\''+arrBlocks[i].id+'\')" id="tab-' + i + '">tab-' + i + '   </button>'
+    tabsIndex.innerHTML += '<div>tab-' + i + ': ' + temp + '</div>'
+  }
+
+  // 递归children 并 去重
+  let varArr = []
+  filterChildren(arrBlocks, varArr)
+  // console.log(varArr)
+  // console.log(e);
+  /* let variableBlocks = workspace.getBlocksByType('variables_get')
+
+  
+  console.log(variableBlocks) */
+  getVarMap()
+  // console.log(workspace.getAllVariables())
+}
+
+function getVarMap(){
+  document.querySelector('#map').innerHTML = ''
+  workspace.getVariableMap().getAllVariables().map((x)=>{
+    document.querySelector('#map').innerHTML += '<button type="button" var-id="'+x.getId()+'">' + x.name + '</button>'
+  })
+}
+
+function getAllVariablesByTab(block){
+  if(!block) return '';
+  var temp = ''
+  // 当前 block 的 var
+  let arr1 = block.getVarModels()
+  if(arr1.length > 0){
+    arr1.map((x,i)=>{
+      // console.log(i + '.' + x.name)
+      temp += '<button type="button" var-id="'+x.getId()+'" block-id="'+block.id+'" onclick="centerVar(\''+block.id+'\')">' + x.name + '</button>' 
+    })
+    // console.log('1. ' + temp)
+  }
+  // 当前 block 的 子
+  let arr2 = block.getChildren()
+  if(arr2.length > 0) {
+    arr2.map((x, i)=>{
+      temp += getAllVariablesByTab(x)
+    })
+    // console.log('2. ' + temp)
+  }
+  // 当前 block 的 next
+  /* let next = block.getNextBlock()
+  if(next){
+    temp += getAllVariablesByTab(block.getNextBlock())
+    console.log('3. ' + temp)
+  } */
+  return temp
+}
+
+function centerVar(id){
+  centerOnVar(id)
+  highlightOnVar(id)
+  // TODO selected
+  // workspace.getBlockById(id).selected = true
+}
+
+function centerOnVar(id){
+  workspace.centerOnBlock(id, true);
+}
+
+function highlightOnVar(id) {
+  workspace.highlightBlock(id);
+}
+
+function unhighlightOnVar(id) {
+  workspace.highlightBlock(id, false);
+}
+
+function filterChildren(arr, varArr){
+  arr.map((x)=>{
+    // console.log(x)
+    varArr.concat(x.getVarModels())
+    if(x.childBlocks_.length>0){
+      filterChildren(x.childBlocks_, varArr)
+    }
+  })
+}
+
+
+function tabClick(id){
+  console.log(id)
+  let tab = document.querySelector('[data-id="'+id+'"]')
+  if(tab.style.display == 'none'){
+    tab.style.display = 'block'
+  }else{
+    tab.style.display = 'none'
+  }
 }
 
 function centerOnBlock() {
@@ -568,11 +682,29 @@ line.blocklyFlyoutLine {
 </style>
 </head>
 <body onload="start()">
+  <h1 style="overflow: hidden; font-size: 14px;">
+    <div class="" style="float: left;">
+        PXT-Blockly Playground TODOs <br>
+        ☑️ 根据 block 组的形式来形成 tabs <div id="tabs"></div><br>
+        TODO 每个 block 组，点击可以高亮当前 tab <br>
+        ☑️ 每个 tab 可以开关显示对应的 block 组（优化内存问题，提升渲染性能）<br>
+        TODO 开关样式 <br>
+        ☑️ 显示每个 tab 所包含的 变量,组中， <br>
+        ☑️ 每个 变量 点击可以 索引 定位 
+        TODO 选中样式 <div id="tabsIndex"></div><br>
+        ☑️ 汇总 变量 合集 <br>
+        TODO 合集中，每个 变量 点击可以高亮显示所属 block 组的形式来形成<div id="map"></div> <br>
+    </div>
+  </h1>
+  
 
   <div id="blocklyDiv"></div>
 
-  <h1>PXT-Blockly Playground</h1>
+  
 
+
+
+  
   <p><a href="javascript:void(workspace.setVisible(true))">Show</a>
    - <a href="javascript:void(workspace.setVisible(false))">Hide</a></p>
 
@@ -696,9 +828,9 @@ line.blocklyFlyoutLine {
   Variables category uses untyped variable blocks.
   See https://developers.google.com/blockly/guides/create-custom-blocks/variables#untyped_variable_blocks for more information. -->
   <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox-categories" style="display: none">
-    <category name="Tabs">
+    <!-- <category name="Tabs">
       <block type="tab_area"></block>
-    </category>
+    </category> -->
 
     <category name="Logic" categorystyle="logic_category" iconclass="blocklyTreeIconCustom logic">
       <label text="Logic" web-icon="" web-class="blocklyFlyoutHeading"></label>
