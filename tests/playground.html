@@ -682,20 +682,7 @@ line.blocklyFlyoutLine {
 </style>
 </head>
 <body onload="start()">
-  <h1 style="overflow: hidden; font-size: 14px;">
-    <div class="" style="float: left;">
-        PXT-Blockly Playground TODOs <br>
-        ☑️ 根据 block 组的形式来形成 tabs <div id="tabs"></div><br>
-        TODO 每个 block 组，点击可以高亮当前 tab <br>
-        ☑️ 每个 tab 可以开关显示对应的 block 组（优化内存问题，提升渲染性能）<br>
-        TODO 开关样式 <br>
-        ☑️ 显示每个 tab 所包含的 变量,组中， <br>
-        ☑️ 每个 变量 点击可以 索引 定位 
-        TODO 选中样式 <div id="tabsIndex"></div><br>
-        ☑️ 汇总 变量 合集 <br>
-        TODO 合集中，每个 变量 点击可以高亮显示所属 block 组的形式来形成<div id="map"></div> <br>
-    </div>
-  </h1>
+  
   
 
   <div id="blocklyDiv"></div>
@@ -709,6 +696,21 @@ line.blocklyFlyoutLine {
    - <a href="javascript:void(workspace.setVisible(false))">Hide</a></p>
 
   <form id="options">
+      <h1 style="overflow: hidden; font-size: 14px;">
+          <div class="" style="float: left;">
+              PXT-Blockly Playground TODOs <br>
+              TODO 默认 一个tab，全在这个 tab 下，然后可以新建 tab，就在新的 tab 下，可以切换 tab （先有篮子的概念，类似新建工作区）<br>
+              ☑️ 根据 block 组的形式来形成 tabs <div id="tabs"></div><br>
+              TODO 每个 block 组，点击可以高亮当前 tab <br>
+              ☑️ 每个 tab 可以开关显示对应的 block 组（优化内存问题，提升渲染性能）<br>
+              TODO 开关样式 <br>
+              ☑️ 显示每个 tab 所包含的 变量,组中， <br>
+              ☑️ 每个 变量 点击可以 索引 定位 
+              TODO 选中样式 <div id="tabsIndex"></div><br>
+              ☑️ 汇总 变量 合集 <br>
+              TODO 合集中，每个 变量 点击可以高亮显示所属 block 组的形式来形成<div id="map"></div> <br>
+          </div>
+        </h1>
     <select name="dir" onchange="document.forms.options.submit()">
       <option value="ltr">LTR</option>
       <option value="rtl">RTL</option>
