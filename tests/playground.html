@@ -73,7 +73,11 @@
 'use strict';
 var workspace = null;
 
+
 function start() {
+
+  addTab()
+  
   setBackgroundColour();
 
   // Parse the URL arguments.
@@ -344,42 +348,182 @@ function logEvents(state) {
 }
 
 
-function logger(e) {
-  // 监听
-  console.log(e.type)
-  // if(e.type != 'move') return;
-  let { group, blockId, workspaceId } = e
-  // console.log({ group, blockId, workspaceId })
+
+
+
+
+// 当前激活的tab
+var activeIndex = 0;
+// tab 数组
+var tabsArr = [];
+// 标记位
+var tabId = 0;
+
+// tab 对象
+function Tab(name, blockIds){
+  this.name = name
+  this.blockIds = blockIds
+}
+Tab.prototype.updateBlockIds = function(ids){
+  this.blockIds = ids
+}
+
+// 新增 tab
+function addTab(){
+  let tab = new Tab('tab'+tabId, [])
+  tabsArr.push(tab)
+  let tabsDom = document.querySelector('#tabs')
+  tabsDom.innerHTML += '<button type="button" class="btn-tab" id="' + tab.name + '" onclick="setTabActive(\''+tab.name+'\')">' + tab.name + '   </button>'
+  // let tabsIndex = document.querySelector('#tabsIndex')
+  // tabsIndex.innerHTML += '<div id="tab-index-'+ tabIndex +'">tab-' + tabIndex + '</div>'
+  tabId++;
+
+  setTabActive(tab.name)
+}
+
+// 删除当前激活的tab
+function deleteTab(){
+  if(tabsArr.length<=1) return
+  let elActive = document.querySelector('.active')
+  // let oldIndex = ''
+  if(elActive) {
+    elActive.remove()
+    // oldIndex = elActive.getAttribute('id').match(/\d+/)[0]
+  }
+
+  // 处理 block
+  tabsArr.splice(activeIndex, 1)
+
+}
+// 移动当前激活的block以及它的子block和链接block
+function moveToTab(blockId){
+
+  // 弹出框输入要移入的tab名称或id
+}
+
+
+// 激活 tab
+function setTabActive(tabName){
+  
+  let elActive = document.querySelector('.active')
+  // let oldIndex = ''
+  if(elActive) {
+    elActive.className = 'btn-tab'
+    // oldIndex = elActive.getAttribute('id').match(/\d+/)[0]
+  }
+  document.querySelector('#' + tabName).className = 'btn-tab active'
+
+  // 处理block 的显示隐藏
+  tabsArr.map((item, index)=>{
+    if(item.name != tabName){
+      item.blockIds.map(x=>{hideBlockById(x)})
+    }else{
+      activeIndex = index
+      item.blockIds.map(x=>{showBlockById(x)})
+    }
+  })
+
+  // console.log(oldIndex, index)
+}
+
+// test
+function test(){
+  let arrBlocks = []
+  if(workspace){
+    arrBlocks = workspace.getTopBlocks()
+    var arr = []
+    arrBlocks.map((item, index)=>{
+      arr.push(item.id)
+    })
+    console.log(arr)
+    console.log(tabIdsArr)
+
+    var temp = []
+    tabIdsArr.map((x)=>{
+      temp = temp.concat(x)
+    })
+    console.log(temp)
+    let isShowBlocks = arrBlocks.filter((item)=>{
+      return !temp.some(x=>{return x == item.id})
+    })
+    console.log(isShowBlocks)
+  }
+}
+
+// 获取所有顶级block的id数组
+function getTopBlocksIds(){
   let arrBlocks = workspace.getTopBlocks()
-  // console.log(arrBlocks)
+  let arrIds = []
+  for(var i = 0; i < arrBlocks.length; i++){
+    arrIds.push(arrBlocks[i].id)
+  }
+  return arrIds
+}
+// 过滤当前 激活tab的 blocksIds
+function getActiveBlocksIds(){
+  let allIds = getTopBlocksIds()
+  let otherIds = []
+  tabsArr.map((item, index)=>{
+    if(index != activeIndex) {
+      otherIds = otherIds.concat(item.blockIds)
+    }
+  })
+  return diffOfAll(otherIds, allIds)
+}
+
+// 取异
+function diffOfAll(arr, all){
+  return all.filter((item)=>{
+    return !arr.some(x=>{return x == item})
+  })
+}
+
+// 根据 id 隐藏组
+function hideBlockById(id){
+  workspace.getBlockById(id).setEnabled(false)
+  document.querySelector('[data-id="'+id+'"]').style.display = 'none'
+}
+// 根据 id 显示组
+function showBlockById(id){
+  document.querySelector('[data-id="'+id+'"]').style.display = 'block'
+}
+
+function logger(e) {
+  // console.log(e)
+  // console.log(e.type)
+  if(e.type == 'create'){
+    console.log('create')
+    tabsArr[activeIndex].blockIds.push(e.blockId)
+  }
+  if(e.type == 'delete'){
+    console.log('delete')
+    tabsArr[activeIndex].blockIds = tabsArr[activeIndex].blockIds.filter(x => {return x!=e.blockId})
+  }
+
+  console.log(tabsArr)
+
+  // 当前激活的 tab 索引
+  // tabsArr[activeIndex].blockIds = getActiveBlocksIds()
+  // console.log(activeIndex)
+  // console.log(tabsArr)
+  // 监听
+/*   let { group, blockId, workspaceId } = e
+  let arrBlocks = workspace.getTopBlocks()
   let tabs = document.querySelector('#tabs')
   let tabsIndex = document.querySelector('#tabsIndex')
   tabs.innerHTML = ''
   tabsIndex.innerHTML = ''
   for(var i = 0; i < arrBlocks.length; i++){
-    // console.log(arrBlocks[i].getVarModels())
     var temp = ''
 
     temp = getAllVariablesByTab(arrBlocks[i])
-    /* arrBlocks[i].getVarModels().map((x)=>{
-      temp += x.name
-    }) */
-    // console.log(arrBlocks[i].childBlocks_.length)
     tabs.innerHTML += '<button type="button" class="btn-tab" onclick="tabClick(\''+arrBlocks[i].id+'\')" id="tab-' + i + '">tab-' + i + '   </button>'
     tabsIndex.innerHTML += '<div>tab-' + i + ': ' + temp + '</div>'
   }
 
-  // 递归children 并 去重
   let varArr = []
   filterChildren(arrBlocks, varArr)
-  // console.log(varArr)
-  // console.log(e);
-  /* let variableBlocks = workspace.getBlocksByType('variables_get')
-
-  
-  console.log(variableBlocks) */
-  getVarMap()
-  // console.log(workspace.getAllVariables())
+  getVarMap() */
 }
 
 function getVarMap(){
@@ -607,8 +751,8 @@ h1 {
 }
 #blocklyDiv {
   float: right;
-  height: 95%;
-  width: 70%;
+  height: 50%;
+  width: 60%;
 }
 #importExport {
   font-family: monospace;
@@ -679,6 +823,13 @@ line.blocklyFlyoutLine {
 }
 
 </style>
+
+<style>
+.btn-tab.active {
+  background-color: #5ba55b;
+  color: #fff;
+}
+</style>
 </head>
 <body onload="start()">
   
@@ -695,11 +846,18 @@ line.blocklyFlyoutLine {
    - <a href="javascript:void(workspace.setVisible(false))">Hide</a></p>
 
   <form id="options">
-      <h1 style="overflow: hidden; font-size: 14px;">
+      <h1 style="overflow: hidden; font-size: 10px;">
           <div class="" style="float: left;">
               PXT-Blockly Playground TODOs <br>
               TODO 默认 一个tab，全在这个 tab 下，然后可以新建 tab，就在新的 tab 下，可以切换 tab （先有篮子的概念，类似新建工作区）<br>
-              ☑️ 根据 block 组的形式来形成 tabs <div id="tabs"></div><br>
+              ☑️ 根据 block 组的形式来形成 tabs 
+              <div>
+                <button type="button" onclick="addTab()">add tab</button>
+                <button type="button" onclick="deleteTab()">delete tab</button>
+                <button type="button" onclick="moveToTab()">move to tab</button>
+
+              </div>
+              <div id="tabs"></div><br>
               TODO 每个 block 组，点击可以高亮当前 tab <br>
               ☑️ 每个 tab 可以开关显示对应的 block 组（优化内存问题，提升渲染性能）<br>
               TODO 开关样式 <br>
