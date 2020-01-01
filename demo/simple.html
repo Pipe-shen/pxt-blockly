@@ -40,6 +40,10 @@
         <!-- <button type="button" onclick="toBlock()">xml to block</button> -->
         <button type="button" onclick="addTab()">new tab</button>
         <button type="button" onclick="removeTab()">remove tab</button>
+        <button type="button" onclick="exportXml()">export tab xml</button>
+        <button type="button" onclick="importXml()" id="import">import tab xml</button>
+        <button type="button" onclick="exportAllXml()">export all xml</button>
+        <button type="button" onclick="importAllXml()">import all xml</button>
     </div>
     <br>
     <div class="">tabs</div>
@@ -55,6 +59,15 @@
     <div class="">var list</div>
     <div id="list">
 
+    </div>
+    <br>
+    <div class="">textarea 
+      <button type="button" onclick="downloadXml()">download Xml</button>
+      <button type="button" onclick="clearXml()">clear Xml</button>
+    </div>
+    <div class="">
+      <textarea id="importExport" style="width: 80%; height: 32em"
+      onchange="taChange();" onkeyup="taChange()"></textarea>
     </div>
   </div>
 
@@ -412,16 +425,34 @@
       if(workspaceArr.length==1) return;
       workspaceArr.splice(activeIndex, 1)
       document.querySelector('.active').remove()
-      setTabActive(workspaceArr[activeIndex-1].workspaceId)
+      if(activeIndex == 0){
+        setTabActive(workspaceArr[0].workspaceId)
+      }else{
+        setTabActive(workspaceArr[activeIndex-1].workspaceId)
+      }
     }
     // tab functions
-    function addTab(){
+    function addTab(xmlString, index){
+      let xml = null
+
+      
+      if(xmlString){
+        try {
+          xml = Blockly.Xml.textToDom(xmlString);
+          Blockly.Xml.domToWorkspace(xml, workspace);
+        } catch (error) {
+          alert('error')
+          return
+        }
+      }
+      
       let tabsDom = document.querySelector('#tabs')
       tabsDom.innerHTML += '<button type="button" class="btn-tab" id="tab' + workspaceId + '" onclick="setTabActive(\''+workspaceId+'\')">tab' + workspaceId + '   </button>'
+      
       workspaceArr.push({
         id: 'tab'+workspaceId,
         workspaceId: workspaceId,
-        xml: null
+        xml: xml
       })
       
       setTabActive(workspaceId)
@@ -511,6 +542,97 @@
         }
       })
     }
+
+    // 单个 tab xml
+    function exportXml() {
+      var output = document.getElementById('importExport');
+      var xml = Blockly.Xml.workspaceToDom(workspace);
+      output.value = Blockly.Xml.domToPrettyText(xml);
+      output.focus();
+      output.select();
+      taChange();
+    }
+
+    function importXml() {
+      var input = document.getElementById('importExport');
+      var xml = Blockly.Xml.textToDom(input.value);
+      Blockly.Xml.domToWorkspace(xml, workspace);
+      taChange();
+    }
+
+    function taChange() {
+      /* var textarea = document.getElementById('importExport');
+      if (sessionStorage) {
+        sessionStorage.setItem('textarea', textarea.value);
+      }
+      var valid = true;
+      try {
+        Blockly.Xml.textToDom(textarea.value);
+      } catch (e) {
+        valid = false;
+      }
+      document.getElementById('import').disabled = !valid; */
+    }
+
+
+    // 所有 tab xml
+    function exportAllXml(){
+      var output = document.getElementById('importExport')
+      output.value = ''
+      workspaceArr.map((item, index)=>{
+        try {
+          Blockly.Xml.domToPrettyText(item.xml)
+          output.value += Blockly.Xml.domToPrettyText(item.xml) +'\n\r'
+        } catch (e){
+          
+        }
+      })
+      // var xml = Blockly.Xml.workspaceToDom(workspace);
+      // output.value = Blockly.Xml.domToPrettyText(xml);
+      output.focus();
+      output.select();
+      taChange();
+    }
+    function importAllXml(){
+      var input = document.getElementById('importExport');
+      // var temp = input.value.replace(/[\f\n\r\t\v]/g,'')
+      var temp = input.value.replace(/<\/xml>[\s]+<xml/g,'</xml>[split]<xml')
+      console.log(temp)
+      console.log(temp.split('[split]'))
+      var arr = temp.split('[split]')
+      var tempWorkspaceArr = []
+      arr.map((item, index) => {
+        addTab(item, index)
+      })
+      // console.log(temp.match(/<xml[^(xml>)]+xml>/g))
+    }
+    // 导出文件
+    function clearXml(){
+      document.getElementById('importExport').value = ''
+    }
+    function downloadXml(){
+      export_raw('test', document.getElementById('importExport').value)
+    }
+    function fake_click(obj) {
+        var ev = document.createEvent("MouseEvents");
+        ev.initMouseEvent(
+            "click", true, false, window, 0, 0, 0, 0, 0
+            , false, false, false, false, 0, null
+            );
+        obj.dispatchEvent(ev);
+    }
+
+    function export_raw(name, data) {
+        var urlObject = window.URL || window.webkitURL || window;
+
+        var export_blob = new Blob([data]);
+
+        var save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+        save_link.href = urlObject.createObjectURL(export_blob);
+        save_link.download = name;
+        fake_click(save_link);
+    }
+
 
     addTab()
   </script>
