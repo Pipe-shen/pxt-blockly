@@ -7,6 +7,8 @@
   <script src="../javascript_compressed.js"></script>
   <script src="../msg/js/en.js"></script>
   <script src="../blocks_compressed.js"></script>
+  <script src="blocks.js"></script>
+  <script src="language.js"></script>
   <style>
   html,body {
     width: 100%;
@@ -34,6 +36,10 @@
 <body>
   <div id="blocklyDiv"></div>
   <div id="fun">
+    <div class="">language</div>
+    <div class="">
+      <select id="languageMenu"></select>
+    </div>
     <div class="">buttons</div>
     <div class="">
         <!-- <button type="button" onclick="toXml()">to xml</button> -->
@@ -72,7 +78,7 @@
   </div>
 
   <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
-    <category name="Logic" colour="%{BKY_LOGIC_HUE}">
+    <category name="%{BKY_CATLOGIC}" colour="%{BKY_LOGIC_HUE}">
       <category name="If">
         <block type="controls_if"></block>
         <block type="controls_if">
@@ -91,7 +97,7 @@
         <block type="logic_ternary"></block>
       </category>
     </category>
-    <category name="Loops" colour="%{BKY_LOOPS_HUE}">
+    <category name="%{BKY_CATLOOPS}" colour="%{BKY_LOOPS_HUE}">
       <block type="controls_repeat_ext">
         <value name="TIMES">
           <block type="math_number">
@@ -121,7 +127,7 @@
       <block type="controls_forEach"></block>
       <block type="controls_flow_statements"></block>
     </category>
-    <category name="Math" colour="%{BKY_MATH_HUE}">
+    <category name="%{BKY_CATMATH}" colour="%{BKY_MATH_HUE}">
       <block type="math_number">
         <field name="NUM">123</field>
       </block>
@@ -160,7 +166,7 @@
       <block type="math_random_float"></block>
       <block type="math_atan2"></block>
     </category>
-    <category name="Lists" colour="%{BKY_LISTS_HUE}">
+    <category name="%{BKY_CATLISTS}" colour="%{BKY_LISTS_HUE}">
       <block type="lists_create_empty"></block>
       <block type="lists_create_with"></block>
       <block type="lists_repeat">
@@ -176,10 +182,13 @@
       <block type="lists_getIndex"></block>
       <block type="lists_setIndex"></block>
     </category>
-    <sep></sep>
-    <category name="Variables" custom="VARIABLE" colour="%{BKY_VARIABLES_HUE}">
+    <category name="%{BKY_CATTEST}">
+      <block type="string_length"></block>
     </category>
-    <category name="Functions" custom="PROCEDURE" colour="%{BKY_PROCEDURES_HUE}">
+    <sep></sep>
+    <category name="%{BKY_CATVARIABLES}" custom="VARIABLE" colour="%{BKY_VARIABLES_HUE}">
+    </category>
+    <category name="%{BKY_CATFUNCTIONS}" custom="PROCEDURE" colour="%{BKY_PROCEDURES_HUE}">
     </category>
     <sep></sep>
     <category name="Library" expanded="true">
@@ -391,6 +400,25 @@
     var activeIndex = 0
     var varListDom = []
 
+    for (var messageKey in MSG) {
+    if (messageKey.indexOf('cat') == 0) {
+      Blockly.Msg[messageKey.toUpperCase()] = MSG[messageKey];
+    }
+  }
+  // Construct the toolbox XML, replacing translated variable names.
+  var toolboxText = document.getElementById('toolbox').outerHTML;
+  toolboxText = toolboxText.replace(/(^|[^%]){(\w+)}/g,
+      function(m, p1, p2) {return p1 + MSG[p2];});
+  var toolboxXml = Blockly.Xml.textToDom(toolboxText);
+
+
+
+
+
+
+
+
+
     workspace = Blockly.inject('blocklyDiv',{
       grid: {
         spacing: 25,
@@ -407,7 +435,7 @@
         scaleSpeed: 1.1
       },
       media: '../media/',
-      toolbox: document.getElementById('toolbox')
+      toolbox: toolboxXml //document.getElementById('toolbox')
     })
 
     workspace.addChangeListener(logger);
@@ -445,7 +473,7 @@
           return
         }
       }
-      
+
       let tabsDom = document.querySelector('#tabs')
       tabsDom.innerHTML += '<button type="button" class="btn-tab" id="tab' + workspaceId + '" onclick="setTabActive(\''+workspaceId+'\')">tab' + workspaceId + '   </button>'
       
@@ -594,6 +622,7 @@
       taChange();
     }
     function importAllXml(){
+      clearSpace()
       var input = document.getElementById('importExport');
       // var temp = input.value.replace(/[\f\n\r\t\v]/g,'')
       var temp = input.value.replace(/<\/xml>[\s]+<xml/g,'</xml>[split]<xml')
@@ -605,6 +634,14 @@
         addTab(item, index)
       })
       // console.log(temp.match(/<xml[^(xml>)]+xml>/g))
+    }
+    function clearSpace(){
+      dom = null
+      workspaceId = 0
+      activeIndex = 0
+      varListDom = []
+      workspaceArr = []
+      document.querySelector('.active').remove()
     }
     // 导出文件
     function clearXml(){

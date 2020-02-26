@@ -807,7 +807,7 @@ Blockly.Constants.Text.TEXT_JOIN_MUTATOR_MIXIN = {
     var savedRendered = block.rendered;
     block.rendered = false;
     // Update the mutation
-    if (update) update.call(this);
+    if (update) {update.call(this);}
     // Allow the source block to rebuild itself.
     this.updateShape_();
     // Restore rendering and show the changes.
@@ -851,7 +851,7 @@ Blockly.Constants.Text.TEXT_JOIN_MUTATOR_MIXIN = {
     }
     if (!this.getInput('TITLE')) {
       this.appendDummyInput('TITLE')
-            .appendField(Blockly.Msg['TEXT_JOIN_TITLE_CREATEWITH']);
+          .appendField(Blockly.Msg['TEXT_JOIN_TITLE_CREATEWITH']);
     }
     // Add new inputs.
     for (var i = 0; i < this.itemCount_; i++) {
@@ -868,7 +868,7 @@ Blockly.Constants.Text.TEXT_JOIN_MUTATOR_MIXIN = {
     }
 
     // pxt-blockly: Use +/- buttons for mutation
-    if (this.getInput('BUTTONS')) this.removeInput('BUTTONS');
+    if (this.getInput('BUTTONS')) {this.removeInput('BUTTONS');}
     var buttons = this.appendDummyInput('BUTTONS');
     if (this.itemCount_ > 1) {
       buttons.appendField(new Blockly.FieldImage(this.REMOVE_IMAGE_DATAURI, 24, 24, "*", remove, false));
